@@ -1,100 +1,117 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
-void main() => runApp(new TodoApp());
+import 'pages/DiscoveryPage.dart';
+import 'pages/MyInfoPage.dart';
+import 'pages/NewsListPage.dart';
+import 'pages/TweetsListPage.dart';
 
-class TodoApp extends StatelessWidget {
+void main() => runApp(new MyApp());
+
+class MyApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return new MaterialApp(title: 'Todo List', home: new TodoList());
-  }
+  State<StatefulWidget> createState() => new MyOSCClientState();
 }
 
-// view
-class TodoList extends StatefulWidget {
-  @override
-  createState() => new TodoListState();
-}
+class MyOSCClientState extends State<MyApp> {
+  int _tabIndex = 0;
+  final tabTextStyleNormal = new TextStyle(color: const Color(0xff969696));
+  final tabTextStyleSelected = new TextStyle(color: const Color(0xff63ca6c));
+  var tabImages;
+  var _body;
 
-// data
-class TodoListState extends State<TodoList> {
-  List<String> _todoItems = [];
+  var appBarTitles = ['资讯', '动弹', '发现', '我的'];
 
-  void _addTodoItem(String task) {
-    if (task.length > 0) {
-      setState(() => _todoItems.add(task));
+  void initData() {
+    if (tabImages == null) {
+      tabImages = [
+        [
+          getTabImage('images/ic_nav_news_normal.png'),
+          getTabImage('images/ic_nav_news_actived.png')
+        ],
+        [
+          getTabImage('images/ic_nav_tweet_normal.png'),
+          getTabImage('images/ic_nav_tweet_actived.png')
+        ],
+        [
+          getTabImage('images/ic_nav_discover_normal.png'),
+          getTabImage('images/ic_nav_discover_actived.png')
+        ],
+        [
+          getTabImage('images/ic_nav_my_normal.png'),
+          getTabImage('images/ic_nav_my_pressed.png')
+        ]
+      ];
     }
-  }
 
-  void _removeTodoItem(int index) {
-    setState(() => _todoItems.removeAt(index));
-  }
-
-  Widget _buildTodoList() {
-    return new ListView.builder(
-      itemBuilder: (context, index) {
-        if (index < _todoItems.length) {
-          return _buildTodoItem(_todoItems[index], index);
-        }
-      },
+    _body = new IndexedStack(
+      children: <Widget>[
+        new NewsListPage(),
+        new TweetsListPage(),
+        new DiscoveryPage(),
+        new MyInfoPage()
+      ],
+      index: _tabIndex,
     );
   }
 
-  Widget _buildTodoItem(String todoText, index) {
-    return new ListTile(
-        title: new Text(todoText), onTap: () => _promptRemoveTodoiTem(index));
-  }
-
-  void _pushAddTodoScene() {
-    Navigator.of(context).push(new MaterialPageRoute(builder: (context) {
-      return new Scaffold(
-        appBar: new AppBar(title: new Text('Add a new task')),
-        body: new TextField(
-          autofocus: true,
-          onSubmitted: (val) {
-            _addTodoItem(val);
-            Navigator.pop(context);
-          },
-          decoration: new InputDecoration(
-              hintText: 'Enter someing to do...',
-              contentPadding: const EdgeInsets.all(16.0)),
-        ),
-      );
-    }));
-  }
-
-  void _promptRemoveTodoiTem(int index) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: new Text('Mark "${_todoItems[index]}" as done?'),
-            actions: <Widget>[
-              new FlatButton(
-                  child: new Text('CANCEL'),
-                  onPressed: () => Navigator.of(context).pop()),
-              new FlatButton(
-                  child: new Text('MARK AS DONE'),
-                  onPressed: () {
-                    _removeTodoItem(index);
-                    Navigator.of(context).pop();
-                  })
-            ],
-          );
-        });
-  }
-
   @override
   Widget build(BuildContext context) {
+    initData();
+
     return new MaterialApp(
-        title: 'Todo List',
-        home: new Scaffold(
-          appBar: new AppBar(title: new Text('Todo List')),
-          body: _buildTodoList(),
-          floatingActionButton: new FloatingActionButton(
-            onPressed: _pushAddTodoScene,
-            tooltip: 'Add task',
-            child: new Icon(Icons.add),
-          ),
-        ));
+      theme: new ThemeData(primaryColor: const Color(0xFF63CA6C)),
+      home: new Scaffold(
+        drawer:
+            new Drawer(child: new Center(child: new Text("this is a drawer"))),
+        appBar: new AppBar(
+          title: new Text(appBarTitles[_tabIndex],
+              style: new TextStyle(color: Colors.white)),
+          iconTheme: new IconThemeData(color: Colors.white),
+        ),
+        body: _body,
+        bottomNavigationBar: new CupertinoTabBar(
+            items: getBottonNavItems(),
+            currentIndex: _tabIndex,
+            onTap: (index) {
+              setState(() {
+                _tabIndex = index;
+              });
+            }),
+      ),
+    );
+  }
+
+  List<BottomNavigationBarItem> getBottonNavItems() {
+    List<BottomNavigationBarItem> list = new List();
+    for (int i = 0; i < 4; i++) {
+      list.add(new BottomNavigationBarItem(
+          icon: getTabIcon(i), title: getTabTitle(i)));
+    }
+    return list;
+  }
+
+  TextStyle getTabTextStyle(int curIndex) {
+    if (curIndex == _tabIndex) {
+      return tabTextStyleSelected;
+    } else {
+      return tabTextStyleNormal;
+    }
+  }
+
+  Image getTabIcon(int curIndex) {
+    if (curIndex == _tabIndex) {
+      return tabImages[curIndex][1];
+    } else {
+      return tabImages[curIndex][0];
+    }
+  }
+
+  Text getTabTitle(int curIndex) {
+    return new Text(appBarTitles[curIndex], style: getTabTextStyle(curIndex));
+  }
+
+  Image getTabImage(path) {
+    return new Image.asset(path, width: 20.0, height: 20.0);
   }
 }

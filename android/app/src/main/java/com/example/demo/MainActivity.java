@@ -1,4 +1,4 @@
-package com.example.todolist;
+package com.example.demo;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;
